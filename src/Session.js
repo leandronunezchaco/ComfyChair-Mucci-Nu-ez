@@ -170,8 +170,8 @@ class Session {
 
         paper.addReview(reviewer, text, score);
     }
-    
-     // Consigna 4.3 selección de artículos 
+
+     // Consigna 4.3 - selección de artículos 
     setAcceptancePercentage(pct) {
         if (pct < 0 || pct > 100) throw new Error("Percentage must be between 0 and 100");
         this._acceptancePercentage = pct;
@@ -185,8 +185,6 @@ class Session {
         const sorted = [...this._papers].sort((a, b) => b.score() - a.score());
         return sorted.slice(0, maxAccepted);
     }
-
-   
 }
 
 module.exports = Session;
