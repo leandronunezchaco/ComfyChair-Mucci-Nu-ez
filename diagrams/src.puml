@@ -1,0 +1,127 @@
+@startuml ComfyChair
+
+skinparam ClassAttributeIconSize 0
+
+class User {
+    -_name: String
+    -_afilliation: String
+    -_email: String
+    -_password: String
+}
+
+class Conference{
+    -_name: String
+    -_chairs: User[]
+    -_sessions: Session[]
+    +name()
+    +addChairs()
+    +sessions()
+    +addSession()
+}
+
+class Session{
+    -_state: SessionState
+    -_programComittee: User[]
+    -_papers : Papers []
+    -_bids: Bid []
+    -_assignments: Paper[]
+    -_acceptancePercentage: float
+    -_reviewers: User []
+    -_acceptedPapers: Paper[]
+
+    +closeSubmissions()
+    +closeAndAssing()
+    +closeReviewing()
+    +submit()
+    +canSubmit()
+    +addReview()
+    +selectPapers()
+    +setAcceptancePercentage()
+    +assignmentsFor() 
+    +isAssigned()
+    +interesetFor()
+}
+
+class Bid {
+    -_paper: Paper
+    -_reviewer: User
+    -_interest: BidValue
+    +paper()
+    +reviewer()
+    +interest()
+    +setInterest()
+}
+
+abstract class Paper {
+    -_title: String
+    -_authors: User[]
+    -_correspondingAuthor: User
+    -_reviews: Review[]
+    +isValid() : Boolean
+    +addReview()
+    +score()
+    +reviewCount()
+    +title()
+    +reviews()
+}
+
+class Review{
+    -_reviewer: User
+    -_text: String
+    -_score: int 
+}
+
+
+class RegularPaper {
+    -_abstract:String
+    +abstract()
+    +setAbstract()
+    +abstractWordCount()
+    +isValid(): Boolean
+}
+
+class Poster {
+    -_attachmentUrl:String
+    -_sourceUrl: String
+    +attachmentUrl
+    +sourceUrl
+    
+}
+
+
+enum Interest{
+    Interested,
+    Maybe,
+    NotInterested
+}
+
+enum SessionState{
+    Receiving
+    Bidding
+    Reviewing
+    Selection
+}
+
+
+
+Paper <|-- RegularPaper
+Paper <|-- Poster
+
+Conference "1" -- "*" Session
+Conference "*" -- "*" User : chairs
+
+Session "1" -- "*" Paper
+Session "1" -- "*" Bid
+Session "*" -- "*" User : reviewers
+Session "1" -- "*" Paper : accepted
+
+Paper "*" -- "*" User : authors
+Paper "1" -- "*" Review
+Paper "*" -- "1" User : correspondingAuthor
+
+Review "*" -- "1" User : reviewer
+
+Bid "*" -- "1" User : reviewer
+Bid "*" -- "1" Paper : paper
+
+@enduml
