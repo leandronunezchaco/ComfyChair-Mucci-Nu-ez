@@ -170,6 +170,21 @@ class Session {
 
         paper.addReview(reviewer, text, score);
     }
+    
+     // Consigna 4.3 selección de artículos 
+    setAcceptancePercentage(pct) {
+        if (pct < 0 || pct > 100) throw new Error("Percentage must be between 0 and 100");
+        this._acceptancePercentage = pct;
+    }
+
+    selectPapers() {
+        if (this.stage() !== "Selection")
+            throw new Error("Selection can only happen during the Selection stage");
+
+        const maxAccepted = Math.floor(this._papers.length * this._acceptancePercentage / 100);
+        const sorted = [...this._papers].sort((a, b) => b.score() - a.score());
+        return sorted.slice(0, maxAccepted);
+    }
 
    
 }
