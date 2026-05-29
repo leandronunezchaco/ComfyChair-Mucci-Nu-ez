@@ -158,6 +158,20 @@ class Session {
         const bid = this.bidFor(paper, reviewer);
         return bid ? bid.interest() : null;
     }
+
+    // carga de revisiones  consigna 4.2
+    addReview(paper, reviewer, text, score) {
+        if (this.stage() !== "Reviewing")
+            throw new Error("Reviews can only be added during the Reviewing stage");
+        if (!this.isAssigned(paper, reviewer))
+            throw new Error("Reviewer is not assigned to this paper");
+        if (score < -3 || score > 3 || !Number.isInteger(score))
+            throw new Error("Score must be an integer between -3 and +3");
+
+        paper.addReview(reviewer, text, score);
+    }
+
+   
 }
 
 module.exports = Session;
