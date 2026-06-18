@@ -1,3 +1,6 @@
+const AcceptanceByCount = require("./acceptance/AcceptanceByCount");
+const AcceptanceByPercentage = require("./acceptance/AcceptanceByPercentage");
+const AcceptanceStrategy = require("./acceptance/AcceptanceStrategy");
 const {Bid, Interests} = require("./Bid");
 
 class Session {
@@ -8,7 +11,10 @@ class Session {
         this._bids = [];
         this._assignments = new Map(); 
         this._stage = "Receiving";
-        this._acceptancePercentage = 100;
+
+        //
+        this._acceptanceStrategy = null
+
     }
 
     name() { return this._name; }
@@ -88,7 +94,7 @@ class Session {
         const base = Math.floor(total / R);
         const extra = total % R;
 
-       
+       //Calculamos la capacidad que puede tener cada revisor
         const capacity = new Map();
         reviewers.forEach((r, i) => {
             capacity.set(r, i < extra ? base + 1 : base);
@@ -107,7 +113,7 @@ class Session {
             return 4;
         };
 
-       
+    
         const authorsOf = (paper) => paper._authors || [];
 
       // asignación en 3 rondas, un revisor por artículo por ronda.
@@ -181,6 +187,7 @@ class Session {
         if (this.stage() !== "Selection")
             throw new Error("Selection can only happen during the Selection stage");
 
+        
         const maxAccepted = Math.floor(this._papers.length * this._acceptancePercentage / 100);
         const sorted = [...this._papers].sort((a, b) => b.score() - a.score());
         return sorted.slice(0, maxAccepted);

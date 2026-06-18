@@ -24,10 +24,9 @@ class Session{
     -_programComittee: User[]
     -_papers : Papers []
     -_bids: Bid []
-    -_assignments: Paper[]
-    -_acceptancePercentage: float
+    -_assignments: Map<Paper,Revierwe>
     -_reviewers: User []
-    -_acceptedPapers: Paper[]
+    -_acceptanceStrategy: AcceptanceStrategy
 
     +closeSubmissions()
     +closeAndAssing()
@@ -36,10 +35,10 @@ class Session{
     +canSubmit()
     +addReview()
     +selectPapers()
-    +setAcceptancePercentage()
     +assignmentsFor() 
     +isAssigned()
-    +interesetFor()
+    +interestFor()
+    +setAcceptanceStrategy()
 }
 
 class Bid {
@@ -104,6 +103,8 @@ enum SessionState{
 
 
 
+
+
 Paper <|-- RegularPaper
 Paper <|-- Poster
 
@@ -113,7 +114,6 @@ Conference "*" -- "*" User : chairs
 Session "1" -- "*" Paper
 Session "1" -- "*" Bid
 Session "*" -- "*" User : reviewers
-Session "1" -- "*" Paper : accepted
 
 Paper "*" -- "*" User : authors
 Paper "1" -- "*" Review
@@ -123,5 +123,32 @@ Review "*" -- "1" User : reviewer
 
 Bid "*" -- "1" User : reviewer
 Bid "*" -- "1" Paper : paper
+
+
+' Agrego una nueva jerarquia
+abstract class AcceptanceStrategy{
+    +accept(papers)
+}
+
+class AcceptanceByPercentage{
+    -_percentage: float
+    +accept(papers)
+}
+
+class AcceptanceByCount{
+    -_count: int 
+    +accept(papers)
+}
+
+class AcceptanceByScoreThreshold{
+    -_threshold: float
+    +accept(papers)
+}
+
+Session --> AcceptanceStrategy
+
+AcceptanceStrategy <|--AcceptanceByPercentage
+AcceptanceStrategy <|--AcceptanceByCount
+AcceptanceStrategy <|--AcceptanceByScoreThreshold
 
 @enduml
