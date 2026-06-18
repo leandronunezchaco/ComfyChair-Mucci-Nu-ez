@@ -1,6 +1,3 @@
-const AcceptanceByCount = require("./acceptance/AcceptanceByCount");
-const AcceptanceByPercentage = require("./acceptance/AcceptanceByPercentage");
-const AcceptanceStrategy = require("./acceptance/AcceptanceStrategy");
 const {Bid, Interests} = require("./Bid");
 
 class Session {
@@ -177,20 +174,18 @@ class Session {
         paper.addReview(reviewer, text, score);
     }
 
-     // Consigna 4.3 - selección de artículos 
-    setAcceptancePercentage(pct) {
-        if (pct < 0 || pct > 100) throw new Error("Percentage must be between 0 and 100");
-        this._acceptancePercentage = pct;
-    }
 
     selectPapers() {
+
         if (this.stage() !== "Selection")
             throw new Error("Selection can only happen during the Selection stage");
+        if (!this._acceptanceStrategy)
+            throw new Error("Acceptance strategy not configured");
+        return this._acceptanceStrategy.accept(this._papers);
+}
 
-        
-        const maxAccepted = Math.floor(this._papers.length * this._acceptancePercentage / 100);
-        const sorted = [...this._papers].sort((a, b) => b.score() - a.score());
-        return sorted.slice(0, maxAccepted);
+    setAcceptanceStrategy(strategy){
+        this._acceptanceStrategy = strategy
     }
 }
 

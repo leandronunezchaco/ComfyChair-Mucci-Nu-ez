@@ -3,6 +3,7 @@ const AcceptanceStrategy = require("./AcceptanceStrategy");
 class AcceptanceByPercentage extends AcceptanceStrategy {
 
     constructor(percentage){
+        super()
         this._percentage = percentage;
     }
 

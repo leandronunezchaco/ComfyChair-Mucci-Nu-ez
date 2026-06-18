@@ -2,6 +2,11 @@ const AcceptanceStrategy = require("./AcceptanceStrategy");
 
 class AcceptanceByScoreThreshold extends AcceptanceStrategy{
     constructor(threshold){
+        super()
+
+        if(threshold < -3 || threshold > 3)
+        throw new Error("Invalid threshold");
+    
         this._threshold = threshold
     }
 
@@ -12,4 +17,4 @@ class AcceptanceByScoreThreshold extends AcceptanceStrategy{
     }
 }
 
-module.exports = AcceptanceByThreshold
+module.exports = AcceptanceByScoreThreshold

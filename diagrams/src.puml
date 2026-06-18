@@ -114,6 +114,7 @@ Conference "*" -- "*" User : chairs
 Session "1" -- "*" Paper
 Session "1" -- "*" Bid
 Session "*" -- "*" User : reviewers
+Session o-- AcceptanceStrategy
 
 Paper "*" -- "*" User : authors
 Paper "1" -- "*" Review
