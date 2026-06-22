@@ -12,7 +12,7 @@ class AcceptanceByCount extends AcceptanceStrategy{
     }
 
     accept(papers) {
-        const sorted = [...papers].sort((a,b) => b.score() - a.score())//crea una copia del array de papers y lo ordena de mayor a menor score - IA
+        const sorted = [...papers].sort((paperA,paperB) => paperB.score() - paperA.score())//crea una copia del array de papers y lo ordena de mayor a menor score - IA
 
         return sorted.slice(0,this._count)
     }

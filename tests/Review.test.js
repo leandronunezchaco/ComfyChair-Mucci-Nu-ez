@@ -7,10 +7,10 @@ let session, r1, r2, r3, author, paper;
 beforeEach(() => {
     session = new Session();
     author = new User("Author", "Uni", "author@u.com", "pass");
-    r1 = new User("R1", "Uni", "r1@u.com", "pass");
-    r2 = new User("R2", "Uni", "r2@u.com", "pass");
-    r3 = new User("R3", "Uni", "r3@u.com", "pass");
-    [r1, r2, r3].forEach(r => session.addReviewer(r));
+    reviewer1 = new User("R1", "Uni", "r1@u.com", "pass");
+    reviewer2 = new User("R2", "Uni", "r2@u.com", "pass");
+    reviewer3 = new User("R3", "Uni", "r3@u.com", "pass");
+    [reviewer1, reviewer2, reviewer3].forEach(r => session.addReviewer(r));
     paper = new Paper("A paper", [author], author);
     session.submit(paper);
     session.closeSubmissions();

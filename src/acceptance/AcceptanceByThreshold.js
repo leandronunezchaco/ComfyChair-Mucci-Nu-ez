@@ -11,7 +11,7 @@ class AcceptanceByScoreThreshold extends AcceptanceStrategy{
     }
 
     accept(papers) {
-        let filteredPapers = papers.filter(p => p.score() >= this._threshold)
+        let filteredPapers = papers.filter(paper => paper.score() >= this._threshold)
 
         return filteredPapers
     }

@@ -69,7 +69,7 @@ class Session {
     }
 
     bidFor(paper, reviewer) {
-        return this._bids.find(b => b.paper() === paper && b.reviewer() === reviewer);
+        return this._bids.find(bid => bid.paper() === paper && bid.reviewer() === reviewer);
     }
 
     interestFor(paper, reviewer) {
@@ -78,27 +78,27 @@ class Session {
 
     //  asignación consigna 4.1 
     _assignReviewers() {
-        const papers = this._papers;
-        const reviewers = this._programCommittee;
-        const A = papers.length;
-        const R = reviewers.length;
+        const submittedPapers = this._papers;
+        const availableReviewers  = this._programCommittee;
+        const totalArticles = submittedPapers.length;
+        const totalReviewers = availableReviewers.length;
 
-        if (R === 0) throw new Error("No reviewers available");
-        if (A === 0) return;
+        if (totalReviewers == 0) throw new Error("No reviewers available");
+        if (totalArticles === 0) return;
 
         // calcula cuántas revisiones debe hacer cada revisor
-        const total = 3 * A;
-        const base = Math.floor(total / R);
-        const extra = total % R;
+        const totalReviewsRequired  = 3 * totalArticles;
+        const reviewsPerReviewer  = Math.floor(totalReviewsRequired / totalReviewers);
+        const remainingReviews  = totalReviewsRequired % totalReviewers;
 
        //Calculamos la capacidad que puede tener cada revisor
         const capacity = new Map();
-        reviewers.forEach((r, i) => {
-            capacity.set(r, i < extra ? base + 1 : base);
+        availableReviewers.forEach((reviewer, index) => {
+            capacity.set(reviewer, index < remainingReviews ? reviewsPerReviewer  + 1 : reviewsPerReviewer );
         });
 
         
-        papers.forEach(p => this._assignments.set(p, []));
+        submittedPapers.forEach(paper => this._assignments.set(paper, []));
 
         // orden de prioridad para un revisor en un artículo determinado
         const priorityOf = (paper, reviewer) => {
@@ -115,13 +115,13 @@ class Session {
 
       // asignación en 3 rondas, un revisor por artículo por ronda.
         for (let round = 0; round < 3; round++) {
-            for (const paper of papers) {
+            for (const paper of submittedPapers) {
                 const assigned = this._assignments.get(paper);
                 if (assigned.length > round) continue;
 
                 const authors = authorsOf(paper);
 
-                const eligible = reviewers
+                const eligible = availableReviewers
                     .filter(r =>
                         !authors.includes(r) &&
                         capacity.get(r) > 0 &&
@@ -131,9 +131,9 @@ class Session {
 
                 if (eligible.length === 0) {
                     
-                    const borrowable = reviewers.find(r =>
-                        !authors.includes(r) &&
-                        !assigned.includes(r)
+                    const borrowable = availableReviewers.find(reviewer =>
+                        !authors.includes(reviewer) &&
+                        !assigned.includes(reviewer)
                     );
                     if (!borrowable)
                         throw new Error(`Could not assign 3 reviewers to paper: "${paper.title()}"`);
@@ -173,15 +173,15 @@ class Session {
 
         paper.addReview(reviewer, text, score);
     }
+selectPapers() {
 
+    if (this.stage() !== "Selection")
+        throw new Error("Selection can only happen during the Selection stage");
 
-    selectPapers() {
+    if (!this._acceptanceStrategy)
+        throw new Error("Acceptance strategy must be configured");
 
-        if (this.stage() !== "Selection")
-            throw new Error("Selection can only happen during the Selection stage");
-        if (!this._acceptanceStrategy)
-            throw new Error("Acceptance strategy not configured");
-        return this._acceptanceStrategy.accept(this._papers);
+    return this._acceptanceStrategy.accept(this._papers);
 }
 
     setAcceptanceStrategy(strategy){

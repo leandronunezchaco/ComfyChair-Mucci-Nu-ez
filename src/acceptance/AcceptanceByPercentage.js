@@ -12,7 +12,7 @@ class AcceptanceByPercentage extends AcceptanceStrategy {
 
         const amount = Math.floor(papers.length * this._percentage / 100);
 
-        const sorted = [...papers].sort((a,b)=> b.score() - a.score()); 
+        const sorted = [...papers].sort((paperA,paperB)=> paperB.score() - paperA.score()); 
         //usa una copia de papers con "..." (para no modificar el original, lo cual hace .sort())
         //a score() se le debe pasar una funcion como argumento
 
