@@ -117,9 +117,7 @@ describe("Reviewer assignment — distribution (⌈3A/R⌉)", () => {
 
     it("should distribute 10 papers among 7 reviewers correctly (2 do 5, 5 do 4)", () => {
 
-
         const submittedPapers = submitPapers(10);
-
 
         session.closeSubmissions();
         session.closeAndAssign();
@@ -140,56 +138,27 @@ describe("Reviewer assignment — distribution (⌈3A/R⌉)", () => {
 
             );
 
-
-
         submittedPapers.forEach(paper => {
-
 
             session.assignmentsFor(paper)
                 .forEach(reviewer => {
 
-
-                    reviewerAssignmentCounts.set(
-                        reviewer,
-                        reviewerAssignmentCounts.get(reviewer) + 1
-                    );
-
-
+                    reviewerAssignmentCounts.set(reviewer, reviewerAssignmentCounts.get(reviewer) + 1);
                 });
-
         });
-
-
 
         const assignmentAmounts =
             [
                 ...reviewerAssignmentCounts.values()
 
-            ].sort(
-                (firstAmount, secondAmount) =>
-                    firstAmount - secondAmount
-            );
-
-
+            ].sort((firstAmount, secondAmount) => firstAmount - secondAmount);
 
         // 5 reviewers with 4 assignments, 2 reviewers with 5 assignments
 
-        expect(
-            assignmentAmounts.filter(
-                amount => amount === 5
-            )
-
-        ).toHaveLength(2);
-
-
+        expect(assignmentAmounts.filter(amount => amount === 5)).toHaveLength(2);
 
         expect(
-            assignmentAmounts.filter(
-                amount => amount === 4
-            )
-
-        ).toHaveLength(5);
-
+            assignmentAmounts.filter(amount => amount === 4)).toHaveLength(5);
 
     });
 

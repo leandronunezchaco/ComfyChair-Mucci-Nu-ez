@@ -77,77 +77,136 @@ class Session {
     }
 
     //  asignación consigna 4.1 
-    _assignReviewers() {
-        const submittedPapers = this._papers;
-        const availableReviewers  = this._programCommittee;
-        const totalArticles = submittedPapers.length;
-        const totalReviewers = availableReviewers.length;
+   _assignReviewers() {
 
-        if (totalReviewers == 0) throw new Error("No reviewers available");
-        if (totalArticles === 0) return;
+    const submittedPapers = this._papers;
+    const availableReviewers = this._programCommittee;
 
-        // calcula cuántas revisiones debe hacer cada revisor
-        const totalReviewsRequired  = 3 * totalArticles;
-        const reviewsPerReviewer  = Math.floor(totalReviewsRequired / totalReviewers);
-        const remainingReviews  = totalReviewsRequired % totalReviewers;
 
-       //Calculamos la capacidad que puede tener cada revisor
-        const capacity = new Map();
-        availableReviewers.forEach((reviewer, index) => {
-            capacity.set(reviewer, index < remainingReviews ? reviewsPerReviewer  + 1 : reviewsPerReviewer );
-        });
+    if (availableReviewers.length === 0)
+        throw new Error("No reviewers available");
 
-        
-        submittedPapers.forEach(paper => this._assignments.set(paper, []));
 
-        // orden de prioridad para un revisor en un artículo determinado
-        const priorityOf = (paper, reviewer) => {
-            const bid = this.bidFor(paper, reviewer);
-            if (!bid) return 2;                              
-            if (bid.interest() === Interests.Interested) return 0;
-            if (bid.interest() === Interests.Maybe) return 1;
-            if (bid.interest() === Interests.NotInterested) return 3;
-            return 4;
-        };
+    if (submittedPapers.length === 0)
+        return;
 
-    
-        const authorsOf = (paper) => paper._authors || [];
 
-      // asignación en 3 rondas, un revisor por artículo por ronda.
-        for (let round = 0; round < 3; round++) {
-            for (const paper of submittedPapers) {
-                const assigned = this._assignments.get(paper);
-                if (assigned.length > round) continue;
+    const capacity = this._buildCapacityMap(
+        submittedPapers.length,
+        availableReviewers
+    );
 
-                const authors = authorsOf(paper);
 
-                const eligible = availableReviewers
-                    .filter(r =>
-                        !authors.includes(r) &&
-                        capacity.get(r) > 0 &&
-                        !assigned.includes(r)
-                    )
-                    .sort((a, b) => priorityOf(paper, a) - priorityOf(paper, b));
+    submittedPapers.forEach(paper =>
+        this._assignments.set(paper, [])
+    );
 
-                if (eligible.length === 0) {
-                    
-                    const borrowable = availableReviewers.find(reviewer =>
-                        !authors.includes(reviewer) &&
-                        !assigned.includes(reviewer)
+
+    for (let round = 0; round < 3; round++) {
+
+        for (const paper of submittedPapers) {
+
+            const assignedReviewers = this._assignments.get(paper);
+
+            if (assignedReviewers.length > round)
+                continue;
+
+
+            let eligibleReviewers =
+                this._eligibleReviewersFor(
+                    paper,
+                    availableReviewers,
+                    capacity,
+                    assignedReviewers
+                );
+
+
+            if (eligibleReviewers.length === 0) {
+
+                const fallbackReviewer =
+                    this._fallbackReviewerFor(
+                        paper,
+                        availableReviewers,
+                        assignedReviewers
                     );
-                    if (!borrowable)
-                        throw new Error(`Could not assign 3 reviewers to paper: "${paper.title()}"`);
-                    capacity.set(borrowable, capacity.get(borrowable) + 1);
-                    assigned.push(borrowable);
-                    capacity.set(borrowable, capacity.get(borrowable) - 1);
-                } else {
-                    const chosen = eligible[0];
-                    assigned.push(chosen);
-                    capacity.set(chosen, capacity.get(chosen) - 1);
-                }
+
+
+                if (!fallbackReviewer)
+                    throw new Error(
+                        `Could not assign reviewers to ${paper.title()}`
+                    );
+
+
+                assignedReviewers.push(fallbackReviewer);
+
+                capacity.set(
+                    fallbackReviewer,
+                    capacity.get(fallbackReviewer) - 1
+                );
+
+                continue;
             }
+
+
+            const selectedReviewer = eligibleReviewers[0];
+
+            assignedReviewers.push(selectedReviewer);
+
+            capacity.set(
+                selectedReviewer,
+                capacity.get(selectedReviewer) - 1
+            );
         }
     }
+}
+    _fallbackReviewerFor(paper, reviewers, assignedReviewers) {
+
+        const authors = paper._authors || [];
+
+        return reviewers.find(reviewer => !authors.includes(reviewer) && !assignedReviewers.includes(reviewer));
+    }
+
+    //Calcula cuántas revisiones puede hacer cada reviewer
+    _buildCapacityMap(articleCount, reviewers)
+{
+    const totalReviewsRequired = 3 * articleCount;
+
+    const reviewsPerReviewer = Math.floor(totalReviewsRequired / reviewers.length);
+    const remainingReviews = totalReviewsRequired % reviewers.length;
+    const capacity = new Map();
+
+
+    reviewers.forEach((reviewer, index) => {
+
+        capacity.set(reviewer,index < remainingReviews? reviewsPerReviewer + 1: reviewsPerReviewer);
+    });
+
+    return capacity;
+}
+
+    //Calculo la prioridad para un revisor en un articulo determinado
+    _priorityOf(paper,reviewer){
+
+        const bid = this.bidFor(paper, reviewer);
+        if (!bid) return 2;                              
+        if (bid.interest() === Interests.Interested) return 0;
+        if (bid.interest() === Interests.Maybe) return 1;
+        if (bid.interest() === Interests.NotInterested) return 3;
+        return 4;
+    };
+
+    _eligibleReviewersFor(paper,reviewers,capacity,assignedReviewers){
+
+    const authors =
+        paper._authors || [];
+
+
+    return reviewers
+
+        .filter(reviewer => !authors.includes(reviewer) && capacity.get(reviewer) > 0 && !assignedReviewers.includes(reviewer))
+
+        .sort((reviewerA, reviewerB) => this._priorityOf(paper, reviewerA) - this._priorityOf(paper, reviewerB));
+}
 
     assignmentsFor(paper) {
         return this._assignments.get(paper) || [];
