@@ -73,7 +73,8 @@ class Session {
     }
 
     interestFor(paper, reviewer) {
-        return this.bidFor(paper, reviewer).interest();
+        const bid = this.bidFor(paper, reviewer);
+        return bid ? bid.interest() : Interests.NotInterested;
     }
 
     //  asignación consigna 4.1 
@@ -184,16 +185,16 @@ class Session {
     return capacity;
 }
 
-    //Calculo la prioridad para un revisor en un articulo determinado
-    _priorityOf(paper,reviewer){
-
-        const bid = this.bidFor(paper, reviewer);
-        if (!bid) return 2;                              
-        if (bid.interest() === Interests.Interested) return 0;
-        if (bid.interest() === Interests.Maybe) return 1;
-        if (bid.interest() === Interests.NotInterested) return 3;
-        return 4;
-    };
+    
+    _priorityOf(paper, reviewer) {
+        const interest = this.interestFor(paper, reviewer);
+        
+        if (interest === Interests.Interested) return 0;
+        if (interest === Interests.Maybe) return 1;
+        if (interest === Interests.NotInterested) return 3;
+        
+        return 4; 
+    }
 
     _eligibleReviewersFor(paper,reviewers,capacity,assignedReviewers){
 
@@ -214,11 +215,6 @@ class Session {
 
     isAssigned(paper, reviewer) {
         return this.assignmentsFor(paper).includes(reviewer);
-    }
-
-    _interestLevelFor(paper, reviewer) {
-        const bid = this.bidFor(paper, reviewer);
-        return bid ? bid.interest() : null;
     }
 
     // carga de revisiones  consigna 4.2
