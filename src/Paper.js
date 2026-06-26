@@ -8,6 +8,10 @@ class Paper{
         this._authors = authors;
         this._correspondingAuthor = correspondingAuthor;
     }
+    //método agregado
+    authors() {
+        return this._authors;
+    }
     title(){
         return this._title;
     }

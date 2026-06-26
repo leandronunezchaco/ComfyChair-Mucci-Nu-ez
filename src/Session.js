@@ -162,7 +162,7 @@ class Session {
 }
     _fallbackReviewerFor(paper, reviewers, assignedReviewers) {
 
-        const authors = paper._authors || [];
+        const authors = paper.authors() || [];
 
         return reviewers.find(reviewer => !authors.includes(reviewer) && !assignedReviewers.includes(reviewer));
     }
@@ -198,8 +198,7 @@ class Session {
 
     _eligibleReviewersFor(paper,reviewers,capacity,assignedReviewers){
 
-    const authors =
-        paper._authors || [];
+    const authors = paper.authors() || [];
 
 
     return reviewers
