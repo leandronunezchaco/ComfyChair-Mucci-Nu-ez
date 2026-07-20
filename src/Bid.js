@@ -21,6 +21,8 @@ class Bid{
     interest(){
         return this._interest;
     }
+
+    //Se puede agregar un encapsulamiento mediante validacion
     setInterest(interest){
         this._interest = interest;
     }

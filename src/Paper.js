@@ -1,5 +1,4 @@
 const Review = require("./Review");
-
 class Paper{
     constructor(title, authors, correspondingAuthor){
         if(!authors.includes(correspondingAuthor)) throw new Error("Corresponding author must be an author");

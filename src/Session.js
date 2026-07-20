@@ -83,20 +83,13 @@ class Session {
     const submittedPapers = this._papers;
     const availableReviewers = this._programCommittee;
 
-
     if (availableReviewers.length === 0)
         throw new Error("No reviewers available");
-
 
     if (submittedPapers.length === 0)
         return;
 
-
-    const capacity = this._buildCapacityMap(
-        submittedPapers.length,
-        availableReviewers
-    );
-
+    const capacity = this._buildCapacityMap(submittedPapers.length,availableReviewers);
 
     submittedPapers.forEach(paper =>
         this._assignments.set(paper, [])
@@ -160,6 +153,7 @@ class Session {
         }
     }
 }
+//busca un revisor de respaldo, que no sea autor o no haya sido asignado
     _fallbackReviewerFor(paper, reviewers, assignedReviewers) {
 
         const authors = paper.authors() || [];
@@ -176,7 +170,6 @@ class Session {
     const remainingReviews = totalReviewsRequired % reviewers.length;
     const capacity = new Map();
 
-
     reviewers.forEach((reviewer, index) => {
 
         capacity.set(reviewer,index < remainingReviews? reviewsPerReviewer + 1: reviewsPerReviewer);
@@ -185,48 +178,53 @@ class Session {
     return capacity;
 }
 
-    
-    _priorityOf(paper, reviewer) {
-        const interest = this.interestFor(paper, reviewer);
-        
-        if (interest === Interests.Interested) return 0;
-        if (interest === Interests.Maybe) return 1;
-        if (interest === Interests.NotInterested) return 3;
-        
-        return 4; 
-    }
 
-    _eligibleReviewersFor(paper,reviewers,capacity,assignedReviewers){
+//Calculo la prioridad para un revisor en un articulo determinado
+_priorityOf(paper,reviewer){
+    const bid = this.bidFor(paper, reviewer);
+    if (!bid) return 2;                              
+    if (bid.interest() === Interests.Interested) return 0;
+    if (bid.interest() === Interests.Maybe) return 1;
+    if (bid.interest() === Interests.NotInterested) return 3;
+    return 4;
+};
 
-    const authors = paper.authors() || [];
+_eligibleReviewersFor(paper,reviewers,capacity,assignedReviewers){
+
+    const authors =
+        paper._authors || [];
 
 
     return reviewers
 
         .filter(reviewer => !authors.includes(reviewer) && capacity.get(reviewer) > 0 && !assignedReviewers.includes(reviewer))
-
         .sort((reviewerA, reviewerB) => this._priorityOf(paper, reviewerA) - this._priorityOf(paper, reviewerB));
 }
 
-    assignmentsFor(paper) {
-        return this._assignments.get(paper) || [];
-    }
+assignmentsFor(paper) {
+    return this._assignments.get(paper) || [];
+}
 
-    isAssigned(paper, reviewer) {
-        return this.assignmentsFor(paper).includes(reviewer);
-    }
+isAssigned(paper, reviewer) {
+    return this.assignmentsFor(paper).includes(reviewer);
+}
 
-    // carga de revisiones  consigna 4.2
-    addReview(paper, reviewer, text, score) {
-        if (this.stage() !== "Reviewing")
-            throw new Error("Reviews can only be added during the Reviewing stage");
-        if (!this.isAssigned(paper, reviewer))
-            throw new Error("Reviewer is not assigned to this paper");
-        if (score < -3 || score > 3 || !Number.isInteger(score))
-            throw new Error("Score must be an integer between -3 and +3");
+_interestLevelFor(paper, reviewer) {
+    const bid = this.bidFor(paper, reviewer);
+    return bid ? bid.interest() : null;
+}
 
-        paper.addReview(reviewer, text, score);
-    }
+// carga de revisiones  consigna 4.2
+addReview(paper, reviewer, text, score) {
+    if (this.stage() !== "Reviewing")
+        throw new Error("Reviews can only be added during the Reviewing stage");
+    if (!this.isAssigned(paper, reviewer))
+        throw new Error("Reviewer is not assigned to this paper");
+    if (score < -3 || score > 3 || !Number.isInteger(score))
+        throw new Error("Score must be an integer between -3 and +3");
+
+    paper.addReview(reviewer, text, score);
+}
 selectPapers() {
 
     if (this.stage() !== "Selection")
