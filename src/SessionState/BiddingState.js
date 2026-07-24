@@ -5,7 +5,7 @@ class BiddingState extends SessionState {
     name() { return "Bidding"; }
 
     enterBid(session, paper, reviewer, interest) {
-        session._internalRegisterBid(paper, reviewer, interest);
+        session.registerBid(paper, reviewer, interest);
     }
 
     closeBidAndAssign(session) {

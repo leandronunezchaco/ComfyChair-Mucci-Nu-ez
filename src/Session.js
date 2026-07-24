@@ -9,9 +9,8 @@ class Session {
         this._papers = [];
         this._bids = [];
         this._assignments = new Map(); 
-        this._stage = new ReviewingState();
+        this._state = new ReceivingState();
         this._acceptanceStrategy = null
-
     }
 
     name() { return this._name; }
@@ -22,13 +21,13 @@ class Session {
         this._programCommittee.push(user);
     }
 
-    stage() {return this._stage.name();}
+    state() {return this._state.name();}
 
-    transitionTo(nextStage){
-        this.stage = nextStage;}
+    transitionTo(nextstate){
+        this._state = nextstate;}
 
     submit(paper) {
-        this._stage.submit(this,paper)
+        this._state.submit(this,paper)
     }
 
     closeSubmissions() {
@@ -53,16 +52,15 @@ class Session {
         return this._state.selectPapers(this);
     }
 
-    //  Métodos de Ayuda e Internos 
     canSubmit(paper) {
-        return this.stage() === "Receiving" && paper.isValid();
+        return this.state() === "Receiving" && paper.isValid();
     }
 
-    _internalAddPaper(paper) {
+    addPaper(paper) {
         this._papers.push(paper);
     }
 
-    _internalRegisterBid(paper, reviewer, interest) {
+    registerBid(paper, reviewer, interest) {
         if (this.bidExistsFor(paper, reviewer)) {
             this.bidFor(paper, reviewer).setInterest(interest);
         } else {
@@ -86,13 +84,11 @@ class Session {
         return bid ? bid.interest() : Interests.NotInterested;
     }
 
-    // Strategy Pattern getter/setter
     acceptanceStrategy() { return this._acceptanceStrategy; }
     setAcceptanceStrategy(strategy) {
         this._acceptanceStrategy = strategy;
     }
 
-    //  Métodos de Asignación 
     assignmentsFor(paper) {
         return this._assignments.get(paper) || [];
     }
@@ -170,13 +166,12 @@ class Session {
         return capacity;
     }
 
-    _priorityOf(paper, reviewer) {
-        const bid = this.bidFor(paper, reviewer);
-        if (!bid) return 2;
-        if (bid.interest() === Interests.Interested) return 0;
-        if (bid.interest() === Interests.Maybe) return 1;
-        if (bid.interest() === Interests.NotInterested) return 3;
-        return 4;
+    _priorityOf(paper,reviewer){
+        const interest = this.interestFor(paper,reviewer)
+
+        if(interest === Interests.Interested) return 0;
+        if(interest === Interests.Maybe) return 1;
+        return 2 
     }
 
     _eligibleReviewersFor(paper, reviewers, capacity, assignedReviewers) {

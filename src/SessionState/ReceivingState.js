@@ -8,7 +8,7 @@ class ReceivingState extends SessionState {
         if (!paper.isValid()) {
             throw new Error("Cannot submit invalid paper");
         }
-        session._internalAddPaper(paper);
+        session.addPaper(paper)
     }
 
     closeSubmissions(session) {
