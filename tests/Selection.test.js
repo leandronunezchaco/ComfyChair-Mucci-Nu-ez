@@ -2,7 +2,7 @@ const Session = require("../src/Session");
 const User = require("../src/User");
 const Paper = require("../src/Paper");
 
-const AcceptanceByPercentage = require("../src/acceptance/AcceptanceByPercentage")
+const AcceptanceByPercentage = require("../src/acceptanceStrategies/AcceptanceByPercentage.js")
 
 let session, author, reviewer1, reviewer2, reviewer3;
 

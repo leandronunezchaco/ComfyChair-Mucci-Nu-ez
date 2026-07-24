@@ -1,7 +1,7 @@
-const AcceptanceStrategy = require("../src/AcceptanceStrategy");
-const AcceptanceByPercentage = require("../src/AcceptanceByPercentage");
-const AcceptanceByCount = require("../src/AcceptanceByCount");
-const AcceptanceByScoreThreshold = require("../src/AcceptanceByThreshold"); //el archivo se llama AcceptanceByThreshold pero la clase es AcceptanceByScoreThreshold
+const AcceptanceStrategy = require("../src/AcceptanceStrategies/AcceptanceStrategy");
+const AcceptanceByPercentage = require("../src/AcceptanceStrategies/AcceptanceByPercentage");
+const AcceptanceByCount = require("../src/AcceptanceStrategies/AcceptanceByCount");
+const AcceptanceByScoreThreshold = require("../src/AcceptanceStrategies/AcceptanceByThreshold"); //el archivo se llama AcceptanceByThreshold pero la clase es AcceptanceByScoreThreshold
 const Session = require("../src/Session");
 const Paper = require("../src/Paper");
 const User = require("../src/User");
@@ -15,9 +15,24 @@ describe("1. AcceptanceStrategy (Clase Base Abstracta)", () => {
 
 describe("2. Estrategia: AcceptanceByPercentage", () => {
     let mockPapers;
+    let reviewer1;
+    let reviewer2;
+    let reviewer3;
 
     beforeEach(() => {
+        const session = new Session();
+
+        author = new User("Autor", "UNLP", "author@u.com", "pass");
+
+        reviewer1 = new User("Rev1", "UNLP", "r1@u.com", "pass");
+        reviewer2 = new User("Rev2", "UNLP", "r2@u.com", "pass");
+        reviewer3 = new User("Rev3", "UNLP", "r3@u.com", "pass");
+
         // Creamos objetos simulados (mocks) de papers con diferentes puntajes ordenados aleatoriamente
+        session.addReviewer(reviewer1);
+        session.addReviewer(reviewer2);
+        session.addReviewer(reviewer3);
+
         mockPapers = [
             { score: () => 1.0 },
             { score: () => 3.0 },

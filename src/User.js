@@ -1,5 +1,3 @@
-
-
 class User{
     constructor(fullName, affiliation, email, password){
         let crypto = require('crypto');

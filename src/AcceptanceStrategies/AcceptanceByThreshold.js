@@ -1,6 +1,7 @@
-const AcceptanceStrategy = require("./AcceptanceStrategy");
+const AcceptanceStrategy = require("./AcceptanceStrategy.js");
 
 class AcceptanceByScoreThreshold extends AcceptanceStrategy{
+
     constructor(threshold){
         super()
 
@@ -13,7 +14,7 @@ class AcceptanceByScoreThreshold extends AcceptanceStrategy{
     accept(papers) {
         let filteredPapers = papers.filter(paper => paper.score() >= this._threshold)
 
-        return filteredPapers
+        return this._sortByScore(papers)
     }
 }
 

@@ -1,4 +1,4 @@
-const AcceptanceStrategy = require("./AcceptanceStrategy");
+const AcceptanceStrategy = require("./AcceptanceStrategy.js");
 
 class AcceptanceByPercentage extends AcceptanceStrategy {
 
@@ -11,10 +11,7 @@ class AcceptanceByPercentage extends AcceptanceStrategy {
     accept(papers){
 
         const amount = Math.floor(papers.length * this._percentage / 100);
-
-        const sorted = [...papers].sort((paperA,paperB)=> paperB.score() - paperA.score()); 
-        //usa una copia de papers con "..." (para no modificar el original, lo cual hace .sort())
-        //a score() se le debe pasar una funcion como argumento
+        const sorted = this._sortByScore(papers)    
 
         return sorted.slice(0, amount);
     }

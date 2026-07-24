@@ -1,4 +1,6 @@
 const {Bid, Interests} = require("./Bid");
+const ReceivingState = require("./SessionState/ReceivingState");
+const ReviewingState = require("./SessionState/ReviewingState");
 
 class Session {
     constructor() {
@@ -7,9 +9,7 @@ class Session {
         this._papers = [];
         this._bids = [];
         this._assignments = new Map(); 
-        this._stage = "Receiving";
-
-        //
+        this._stage = new ReviewingState();
         this._acceptanceStrategy = null
 
     }
@@ -22,47 +22,56 @@ class Session {
         this._programCommittee.push(user);
     }
 
+    stage() {return this._stage.name();}
+
+    transitionTo(nextStage){
+        this.stage = nextStage;}
+
+    submit(paper) {
+        this._stage.submit(this,paper)
+    }
+
+    closeSubmissions() {
+        this._state.closeSubmissions(this);
+    }
+
+    enterBid(paper, reviewer, interest) {
+        this._state.enterBid(this, paper, reviewer, interest);
+    }
+
+    closeAndAssign() {
+        this._state.closeAndAssign(this);
+    }
+
+    addReview(paper, reviewer, text, score) {
+        this._state.addReview(this, paper, reviewer, text, score);
+    }
+    closeReviewing() {
+        this._state.closeReviewing(this);
+    }
+    selectPapers() {
+        return this._state.selectPapers(this);
+    }
+
+    //  Métodos de Ayuda e Internos 
     canSubmit(paper) {
         return this.stage() === "Receiving" && paper.isValid();
     }
 
-    submit(paper) {
-        if (!this.canSubmit(paper)) throw new Error("Cannot submit invalid paper");
+    _internalAddPaper(paper) {
         this._papers.push(paper);
     }
 
-    papers() { return this._papers; }
-    bids() { return this._bids; }
-    stage() { return this._stage; }
-    setStage(stage) { this._stage = stage; }
-
-    // transiciones
-    closeSubmissions() {
-        this.setStage("Bidding");
-    }
-
-    closeAndAssign() {
-        if (this.stage() !== "Bidding") throw new Error("Must be in Bidding stage");
-        this._assignReviewers();
-        this.setStage("Reviewing");
-    }
-
-    closeReviewing() {
-        if (this.stage() !== "Reviewing") throw new Error("Must be in Reviewing stage");
-        this.setStage("Selection");
-    }
-
-    // bidding
-    enterBid(paper, reviewer, interest) {
-        if (this.stage() !== "Bidding")
-            throw new Error("Cannot enter bids from the current stage.");
-
+    _internalRegisterBid(paper, reviewer, interest) {
         if (this.bidExistsFor(paper, reviewer)) {
             this.bidFor(paper, reviewer).setInterest(interest);
         } else {
             this._bids.push(new Bid(paper, reviewer, interest));
         }
     }
+
+    papers() { return this._papers; }
+    bids() { return this._bids; }
 
     bidExistsFor(paper, reviewer) {
         return typeof this.bidFor(paper, reviewer) !== "undefined";
@@ -77,168 +86,106 @@ class Session {
         return bid ? bid.interest() : Interests.NotInterested;
     }
 
-    //  asignación consigna 4.1 
-   _assignReviewers() {
+    // Strategy Pattern getter/setter
+    acceptanceStrategy() { return this._acceptanceStrategy; }
+    setAcceptanceStrategy(strategy) {
+        this._acceptanceStrategy = strategy;
+    }
 
-    const submittedPapers = this._papers;
-    const availableReviewers = this._programCommittee;
+    //  Métodos de Asignación 
+    assignmentsFor(paper) {
+        return this._assignments.get(paper) || [];
+    }
 
-    if (availableReviewers.length === 0)
-        throw new Error("No reviewers available");
+    isAssigned(paper, reviewer) {
+        return this.assignmentsFor(paper).includes(reviewer);
+    }
 
-    if (submittedPapers.length === 0)
-        return;
+    _assignReviewers() {
+        const submittedPapers = this._papers;
+        const availableReviewers = this._programCommittee;
 
-    const capacity = this._buildCapacityMap(submittedPapers.length,availableReviewers);
+        if (availableReviewers.length === 0)
+            throw new Error("No reviewers available");
 
-    submittedPapers.forEach(paper =>
-        this._assignments.set(paper, [])
-    );
+        if (submittedPapers.length === 0)
+            return;
 
+        const capacity = this._buildCapacityMap(submittedPapers.length, availableReviewers);
 
-    for (let round = 0; round < 3; round++) {
+        submittedPapers.forEach(paper =>
+            this._assignments.set(paper, [])
+        );
 
-        for (const paper of submittedPapers) {
+        for (let round = 0; round < 3; round++) {
+            for (const paper of submittedPapers) {
+                const assignedReviewers = this._assignments.get(paper);
 
-            const assignedReviewers = this._assignments.get(paper);
+                if (assignedReviewers.length > round) continue;
 
-            if (assignedReviewers.length > round)
-                continue;
-
-
-            let eligibleReviewers =
-                this._eligibleReviewersFor(
+                let eligibleReviewers = this._eligibleReviewersFor(
                     paper,
                     availableReviewers,
                     capacity,
                     assignedReviewers
                 );
 
-
-            if (eligibleReviewers.length === 0) {
-
-                const fallbackReviewer =
-                    this._fallbackReviewerFor(
+                if (eligibleReviewers.length === 0) {
+                    const fallbackReviewer = this._fallbackReviewerFor(
                         paper,
                         availableReviewers,
                         assignedReviewers
                     );
 
+                    if (!fallbackReviewer)
+                        throw new Error(`Could not assign reviewers to ${paper.title()}`);
 
-                if (!fallbackReviewer)
-                    throw new Error(
-                        `Could not assign reviewers to ${paper.title()}`
-                    );
+                    assignedReviewers.push(fallbackReviewer);
+                    capacity.set(fallbackReviewer, capacity.get(fallbackReviewer) - 1);
+                    continue;
+                }
 
-
-                assignedReviewers.push(fallbackReviewer);
-
-                capacity.set(
-                    fallbackReviewer,
-                    capacity.get(fallbackReviewer) - 1
-                );
-
-                continue;
+                const selectedReviewer = eligibleReviewers[0];
+                assignedReviewers.push(selectedReviewer);
+                capacity.set(selectedReviewer, capacity.get(selectedReviewer) - 1);
             }
-
-
-            const selectedReviewer = eligibleReviewers[0];
-
-            assignedReviewers.push(selectedReviewer);
-
-            capacity.set(
-                selectedReviewer,
-                capacity.get(selectedReviewer) - 1
-            );
         }
     }
-}
-//busca un revisor de respaldo, que no sea autor o no haya sido asignado
+
     _fallbackReviewerFor(paper, reviewers, assignedReviewers) {
-
-        const authors = paper.authors() || [];
-
+        const authors = paper.authors();
         return reviewers.find(reviewer => !authors.includes(reviewer) && !assignedReviewers.includes(reviewer));
     }
 
-    //Calcula cuántas revisiones puede hacer cada reviewer
-    _buildCapacityMap(articleCount, reviewers)
-{
-    const totalReviewsRequired = 3 * articleCount;
+    _buildCapacityMap(articleCount, reviewers) {
+        const totalReviewsRequired = 3 * articleCount;
+        const reviewsPerReviewer = Math.floor(totalReviewsRequired / reviewers.length);
+        const remainingReviews = totalReviewsRequired % reviewers.length;
+        const capacity = new Map();
 
-    const reviewsPerReviewer = Math.floor(totalReviewsRequired / reviewers.length);
-    const remainingReviews = totalReviewsRequired % reviewers.length;
-    const capacity = new Map();
+        reviewers.forEach((reviewer, index) => {
+            capacity.set(reviewer, index < remainingReviews ? reviewsPerReviewer + 1 : reviewsPerReviewer);
+        });
 
-    reviewers.forEach((reviewer, index) => {
+        return capacity;
+    }
 
-        capacity.set(reviewer,index < remainingReviews? reviewsPerReviewer + 1: reviewsPerReviewer);
-    });
+    _priorityOf(paper, reviewer) {
+        const bid = this.bidFor(paper, reviewer);
+        if (!bid) return 2;
+        if (bid.interest() === Interests.Interested) return 0;
+        if (bid.interest() === Interests.Maybe) return 1;
+        if (bid.interest() === Interests.NotInterested) return 3;
+        return 4;
+    }
 
-    return capacity;
-}
-
-
-//Calculo la prioridad para un revisor en un articulo determinado
-_priorityOf(paper,reviewer){
-    const bid = this.bidFor(paper, reviewer);
-    if (!bid) return 2;                              
-    if (bid.interest() === Interests.Interested) return 0;
-    if (bid.interest() === Interests.Maybe) return 1;
-    if (bid.interest() === Interests.NotInterested) return 3;
-    return 4;
-};
-
-_eligibleReviewersFor(paper,reviewers,capacity,assignedReviewers){
-
-    const authors =
-        paper._authors || [];
-
-
-    return reviewers
-
-        .filter(reviewer => !authors.includes(reviewer) && capacity.get(reviewer) > 0 && !assignedReviewers.includes(reviewer))
-        .sort((reviewerA, reviewerB) => this._priorityOf(paper, reviewerA) - this._priorityOf(paper, reviewerB));
-}
-
-assignmentsFor(paper) {
-    return this._assignments.get(paper) || [];
-}
-
-isAssigned(paper, reviewer) {
-    return this.assignmentsFor(paper).includes(reviewer);
-}
-
-_interestLevelFor(paper, reviewer) {
-    const bid = this.bidFor(paper, reviewer);
-    return bid ? bid.interest() : null;
-}
-
-// carga de revisiones  consigna 4.2
-addReview(paper, reviewer, text, score) {
-    if (this.stage() !== "Reviewing")
-        throw new Error("Reviews can only be added during the Reviewing stage");
-    if (!this.isAssigned(paper, reviewer))
-        throw new Error("Reviewer is not assigned to this paper");
-    if (score < -3 || score > 3 || !Number.isInteger(score))
-        throw new Error("Score must be an integer between -3 and +3");
-
-    paper.addReview(reviewer, text, score);
-}
-selectPapers() {
-
-    if (this.stage() !== "Selection")
-        throw new Error("Selection can only happen during the Selection stage");
-
-    if (!this._acceptanceStrategy)
-        throw new Error("Acceptance strategy must be configured");
-
-    return this._acceptanceStrategy.accept(this._papers);
-}
-
-    setAcceptanceStrategy(strategy){
-        this._acceptanceStrategy = strategy
+    _eligibleReviewersFor(paper, reviewers, capacity, assignedReviewers) {
+        const authors = paper.authors() || []; // Corregido paper._authors por paper.authors()
+        return reviewers
+            .filter(reviewer => !authors.includes(reviewer) && capacity.get(reviewer) > 0 && !assignedReviewers.includes(reviewer))
+            .sort((reviewerA, reviewerB) => this._priorityOf(paper, reviewerA) - this._priorityOf(paper, reviewerB));
     }
 }
+
 
 module.exports = Session;
