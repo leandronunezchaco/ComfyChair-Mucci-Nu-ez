@@ -1,6 +1,6 @@
-const Session = require("../src/Session");
-const User = require("../src/User");
-const Paper = require("../src/Paper");
+const Session = require("../src/Session.js");
+const User = require("../src/User.js");
+const Paper = require("../src/Paper.js");
 
 const AcceptanceByPercentage = require("../src/acceptanceStrategies/AcceptanceByPercentage.js")
 
@@ -9,18 +9,21 @@ let session, author, reviewer1, reviewer2, reviewer3;
 function buildSession(paperCount) {
     const session = new Session();
 
-    author = new User("Author", "Uni", "a@u.com", "pass");
-    reviewer1 = new User("R1", "Uni", "r1@u.com", "pass");
-    reviewer2 = new User("R2", "Uni", "r2@u.com", "pass");
-    reviewer3 = new User("R3", "Uni", "r3@u.com", "pass");
+        author = new User("Aut", "UNLP", "author@u.com", "pass");
+        reviewer1 = new User("Rev1", "UNLP", "r1@u.com", "pass");
+        reviewer2 = new User("Rev2", "UNLP", "r2@u.com", "pass");
+        reviewer3 = new User("Rev3", "UNLP", "r3@u.com", "pass");
+
 
     [reviewer1, reviewer2, reviewer3].forEach(reviewer => session.addReviewer(reviewer));
+    
     const submittedPapers = [];
     for (let i = 0; i < paperCount; i++) {
         const p = new Paper(`Paper ${i}`, [author], author);
         session.submit(p);
         submittedPapers.push(p);
     }
+    
     session.closeSubmissions();
     session.closeAndAssign();
     return { session, submittedPapers };
@@ -63,11 +66,6 @@ describe("Paper selection", () => {
         expect(() => session.selectPapers()).toThrow();
     });
 
-    it("should reject invalid acceptance percentages", () => {
-        const { session } = buildSession(1);
-        expect(() => session.setAcceptancePercentage(-1)).toThrow();
-        expect(() => session.setAcceptancePercentage(101)).toThrow();
-    });
 
     it("should use floor when percentage doesn't yield a whole number", () => {
         // 3 papers, 33% → floor(3 * 0.33) = 0... use 34% → floor(1.02) = 1

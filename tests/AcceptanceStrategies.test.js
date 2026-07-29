@@ -22,7 +22,7 @@ describe("2. Estrategia: AcceptanceByPercentage", () => {
     beforeEach(() => {
         const session = new Session();
 
-        author = new User("Autor", "UNLP", "author@u.com", "pass");
+        author = new User("Aut", "UNLP", "author@u.com", "pass");
 
         reviewer1 = new User("Rev1", "UNLP", "r1@u.com", "pass");
         reviewer2 = new User("Rev2", "UNLP", "r2@u.com", "pass");

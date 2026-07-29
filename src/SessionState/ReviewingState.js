@@ -1,5 +1,5 @@
 const SessionState = require("./SessionState.js");
-const BiddingState = require("./BiddingState.js");
+const SelectionState = require("./SelectionState.js");
 
 class ReviewingState extends SessionState {
     name() { return "Reviewing"; }

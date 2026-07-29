@@ -1,6 +1,5 @@
 const {Bid, Interests} = require("./Bid");
 const ReceivingState = require("./SessionState/ReceivingState");
-const ReviewingState = require("./SessionState/ReviewingState");
 
 class Session {
     constructor() {
@@ -13,14 +12,29 @@ class Session {
         this._acceptanceStrategy = null
     }
 
+
+    //#region getters basicos
     name() { return this._name; }
+    papers() { return this._papers; }
+    bids() { return this._bids; }
     programCommittee() { return this._programCommittee; }
     reviewers() { return this._programCommittee; }
 
     addReviewer(user) {
         this._programCommittee.push(user);
     }
+    //#endregion
 
+    //#region State pattern
+    //Receiving
+    //Bidding
+    //Reviewing
+    //Selection
+    //#endregion
+
+    //#region PATRON STATE
+
+    //#region Receiving STATE
     state() {return this._state.name();}
 
     transitionTo(nextstate){
@@ -34,43 +48,36 @@ class Session {
         this._state.closeSubmissions(this);
     }
 
+    //#endregion
+
+    //#region Bidding STATE
     enterBid(paper, reviewer, interest) {
         this._state.enterBid(this, paper, reviewer, interest);
     }
 
-    closeAndAssign() {
-        this._state.closeAndAssign(this);
+    closeBidAndAssign() {
+        this._state.closeBidAndAssign(this);
     }
+    //#endregion
 
+    //#region Reviewing STATE
     addReview(paper, reviewer, text, score) {
         this._state.addReview(this, paper, reviewer, text, score);
     }
     closeReviewing() {
         this._state.closeReviewing(this);
     }
+    //#endregion
+
+    //#region Selection STATE
     selectPapers() {
         return this._state.selectPapers(this);
     }
+    //#endregion
+    //#endregion
 
-    canSubmit(paper) {
-        return this.state() === "Receiving" && paper.isValid();
-    }
 
-    addPaper(paper) {
-        this._papers.push(paper);
-    }
-
-    registerBid(paper, reviewer, interest) {
-        if (this.bidExistsFor(paper, reviewer)) {
-            this.bidFor(paper, reviewer).setInterest(interest);
-        } else {
-            this._bids.push(new Bid(paper, reviewer, interest));
-        }
-    }
-
-    papers() { return this._papers; }
-    bids() { return this._bids; }
-
+    //#region Bid
     bidExistsFor(paper, reviewer) {
         return typeof this.bidFor(paper, reviewer) !== "undefined";
     }
@@ -83,12 +90,18 @@ class Session {
         const bid = this.bidFor(paper, reviewer);
         return bid ? bid.interest() : Interests.NotInterested;
     }
+    //#endregion
 
+    
+    //#region Acceptance strategy
     acceptanceStrategy() { return this._acceptanceStrategy; }
+
     setAcceptanceStrategy(strategy) {
         this._acceptanceStrategy = strategy;
     }
+    //#endregion
 
+    //#region Assignment
     assignmentsFor(paper) {
         return this._assignments.get(paper) || [];
     }
@@ -96,7 +109,7 @@ class Session {
     isAssigned(paper, reviewer) {
         return this.assignmentsFor(paper).includes(reviewer);
     }
-
+    
     _assignReviewers() {
         const submittedPapers = this._papers;
         const availableReviewers = this._programCommittee;
@@ -180,6 +193,21 @@ class Session {
             .filter(reviewer => !authors.includes(reviewer) && capacity.get(reviewer) > 0 && !assignedReviewers.includes(reviewer))
             .sort((reviewerA, reviewerB) => this._priorityOf(paper, reviewerA) - this._priorityOf(paper, reviewerB));
     }
+    //#endregion
+
+    //#region helpers
+    addPaper(paper) {
+        this._papers.push(paper);
+    }
+
+    registerBid(paper, reviewer, interest) {
+        if (this.bidExistsFor(paper, reviewer)) {
+            this.bidFor(paper, reviewer).setInterest(interest);
+        } else {
+            this._bids.push(new Bid(paper, reviewer, interest));
+        }
+    }
+    //#endregion
 }
 
 

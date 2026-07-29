@@ -22,17 +22,17 @@ beforeEach(() => {
     session = new Session();
 
     // Reviewers
-    reviewer1 = new User("R1", "Uni", "r1@u.com", "pass");
-    reviewer2 = new User("R2", "Uni", "r2@u.com", "pass");
-    reviewer3 = new User("R3", "Uni", "r3@u.com", "pass");
-    reviewer4 = new User("R4", "Uni", "r4@u.com", "pass");
-    reviewer5 = new User("R5", "Uni", "r5@u.com", "pass");
-    reviewer6 = new User("R6", "Uni", "r6@u.com", "pass");
-    reviewer7 = new User("R7", "Uni", "r7@u.com", "pass");
+    reviewer1 = new User("Rev1", "UNLP", "r1@u.com", "pass");
+    reviewer2 = new User("Rev2", "UNLP", "r2@u.com", "pass");
+    reviewer3 = new User("Rev3", "UNLP", "r3@u.com", "pass");
+    reviewer4 = new User("Rev4", "UNLP", "r4@u.com", "pass");
+    reviewer5 = new User("Rev5", "UNLP", "r5@u.com", "pass");
+    reviewer6 = new User("Rev6", "UNLP", "r6@u.com", "pass");
+    reviewer7 = new User("Rev7", "UNLP", "r7@u.com", "pass");
 
     // Authors (not reviewers)
-    author1 = new User("A1", "Uni", "a1@u.com", "pass");
-    author2 = new User("A2", "Uni", "a2@u.com", "pass");
+    author1 = new User("Aut1", "UNLP", "a1@u.com", "pass");
+    author2 = new User("Aut2", "UNLP", "a2@u.com", "pass");
 
 
     [
@@ -55,8 +55,7 @@ function submitPapers(paperCount) {
 
     for (let paperIndex = 0; paperIndex < paperCount; paperIndex++) {
 
-        const paper =
-            new Paper(`Paper ${paperIndex}`,[author1, author2],author1);
+        const paper = new Paper(`Paper ${paperIndex}`,[author1, author2],author1);
 
         session.submit(paper);
 
@@ -68,59 +67,46 @@ function submitPapers(paperCount) {
 
 
 
-describe("Reviewer assignment — basics", () => {
+describe("Asignacion de revisores", () => {
 
-    it("should assign exactly 3 reviewers per paper", () => {
+    it("Debe asignar 3 revisores por paper", () => {
 
         const submittedPapers = submitPapers(3);
 
         session.closeSubmissions();
-        session.closeAndAssign();
+        session.closeBidAndAssign();
 
         submittedPapers.forEach(paper => {
-
             expect(session.assignmentsFor(paper)).toHaveLength(3);
-
         });
     });
 
-    it("should transition to Reviewing stage after assignment", () => {
+    it("Debe pasar a la etapa de revisión después de la asignación", () => {
 
         submitPapers(1);
 
         session.closeSubmissions();
-        session.closeAndAssign();
+        session.closeBidAndAssign();
 
-
-        expect(session.stage())
-            .toBe("Reviewing");
-
+        expect(session.state()).toBe("Reviewing");
     });
 
 
+    it("No debe permitir 'closeBidAndAssing' fuera de la etapa de licitación.", () => {
 
-    it("should not allow closeAndAssign outside Bidding stage", () => {
-
-        expect(() => session.closeAndAssign())
-            .toThrow();
-
+        expect(() => session.closeBidAndAssing()).toThrow();
     });
-
-
 });
 
 
-
-
 describe("Reviewer assignment — distribution (⌈3A/R⌉)", () => {
-
 
     it("should distribute 10 papers among 7 reviewers correctly (2 do 5, 5 do 4)", () => {
 
         const submittedPapers = submitPapers(10);
 
         session.closeSubmissions();
-        session.closeAndAssign();
+        session.closeBidAndAssign();
 
         const reviewerAssignmentCounts =
             new Map(
@@ -210,7 +196,7 @@ describe("Reviewer assignment — distribution (⌈3A/R⌉)", () => {
 
 
         isolatedSession.closeSubmissions();
-        isolatedSession.closeAndAssign();
+        isolatedSession.closeBidAndAssing();
 
 
 
@@ -322,7 +308,7 @@ describe("Reviewer assignment — bid priority", () => {
 
 
 
-        isolatedSession.closeAndAssign();
+        isolatedSession.closeBidAndAssing();
 
 
 
@@ -390,7 +376,7 @@ describe("Reviewer assignment — bid priority", () => {
 
 
 
-        isolatedSession.closeAndAssign();
+        isolatedSession.closeBidAndAssing();
 
 
 
@@ -430,7 +416,7 @@ describe("Reviewer assignment — conflict of interest", () => {
 
         isolatedSession.submit(conflictPaper);
         isolatedSession.closeSubmissions();
-        isolatedSession.closeAndAssign();
+        isolatedSession.closeBidAndAssing();
 
         const assignedReviewers = isolatedSession.assignmentsFor(conflictPaper); 
 

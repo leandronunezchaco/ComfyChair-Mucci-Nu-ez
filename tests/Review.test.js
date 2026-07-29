@@ -6,16 +6,17 @@ let session, r1, r2, r3, author, paper;
 
 beforeEach(() => {
     session = new Session();
-    author = new User("Author", "Uni", "author@u.com", "pass");
-    reviewer1 = new User("R1", "Uni", "r1@u.com", "pass");
-    reviewer2 = new User("R2", "Uni", "r2@u.com", "pass");
-    reviewer3 = new User("R3", "Uni", "r3@u.com", "pass");
+    author = new User("Autor", "UNLP", "author@u.com", "pass");
+
+    reviewer1 = new User("Rev1", "UNLP", "r1@u.com", "pass");
+    reviewer2 = new User("Rev2", "UNLP", "r2@u.com", "pass");
+    reviewer3 = new User("Rev3", "UNLP", "r3@u.com", "pass");
+
     [reviewer1, reviewer2, reviewer3].forEach(r => session.addReviewer(r));
     paper = new Paper("A paper", [author], author);
     session.submit(paper);
     session.closeSubmissions();
     session.closeAndAssign();
-    // la sesión se encuentra ahora en fase de revisión
 });
 
 describe("Review loading", () => {
