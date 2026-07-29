@@ -4,12 +4,12 @@ const Paper = require("../src/Paper.js");
 
 const AcceptanceByPercentage = require("../src/acceptanceStrategies/AcceptanceByPercentage.js")
 
-let session, author, reviewer1, reviewer2, reviewer3;
+let session, author1, reviewer1, reviewer2, reviewer3;
 
 function buildSession(paperCount) {
     const session = new Session();
 
-        author = new User("Aut", "UNLP", "author@u.com", "pass");
+        author1 = new User("Aut", "UNLP", "author@u.com", "pass");
         reviewer1 = new User("Rev1", "UNLP", "r1@u.com", "pass");
         reviewer2 = new User("Rev2", "UNLP", "r2@u.com", "pass");
         reviewer3 = new User("Rev3", "UNLP", "r3@u.com", "pass");
