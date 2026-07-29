@@ -26,7 +26,7 @@ describe("A new Bid", ()=>{
     });
 });
 
-describe("A Bid", ()=>{
+describe("An existing Bid", ()=>{
     it("should allow changing the interest level", ()=>{
         bid.setInterest(Interests.Maybe);
         expect(bid.interest()).toBe(Interests.Maybe);

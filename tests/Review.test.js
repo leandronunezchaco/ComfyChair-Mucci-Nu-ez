@@ -16,7 +16,7 @@ beforeEach(() => {
     paper = new Paper("A paper", [author], author);
     session.submit(paper);
     session.closeSubmissions();
-    session.closeAndAssign();
+    session.closeBidAndAssign();
 });
 
 describe("Review loading", () => {

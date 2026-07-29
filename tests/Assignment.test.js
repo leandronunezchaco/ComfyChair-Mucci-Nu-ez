@@ -3,13 +3,11 @@ const User = require("../src/User");
 const Paper = require("../src/Paper");
 const { Interests } = require("../src/Bid");
 
-
 let session;
 let reviewer1, reviewer2, reviewer3,reviewer4,reviewer5,reviewer6,reviewer7;
 
 let author1;
 let author2;
-
 
 beforeEach(() => {
     session = new Session();
@@ -62,7 +60,6 @@ function buildSession(reviewerCount) {
         reviewer5,
         reviewer6,
         reviewer7
-
     ]
     .slice(0, reviewerCount)
     .forEach(reviewer => newSession.addReviewer(reviewer));
@@ -75,9 +72,7 @@ function buildSession(reviewerCount) {
 describe("during reviewer assignment", () => {
 
     it("should assign three reviewers to each paper", () => {
-
         const submittedPapers = submitPapers(3);
-
         session.closeSubmissions();
         session.closeBidAndAssign();
 
@@ -87,7 +82,6 @@ describe("during reviewer assignment", () => {
     });
 
     it("should transition to Reviewing after assigning reviewers", () => {
-
         submitPapers(1);
 
         session.closeSubmissions();
@@ -95,7 +89,6 @@ describe("during reviewer assignment", () => {
 
         expect(session.state()).toBe("Reviewing");
     });
-
 
     it("should reject reviewer assignment outside the Bidding stage", () => {
         expect(() => session.closeBidAndAssign()).toThrow();
@@ -126,14 +119,12 @@ describe("Reviewer assignment — distribution (⌈3A/R⌉)", () => {
                     reviewer7
 
                 ].map(reviewer => [reviewer, 0])
-
             );
 
         submittedPapers.forEach(paper => {
 
             session.assignmentsFor(paper)
                 .forEach(reviewer => {
-
                     reviewerAssignmentCounts.set(reviewer, reviewerAssignmentCounts.get(reviewer) + 1);
                 });
         });
@@ -144,12 +135,9 @@ describe("Reviewer assignment — distribution (⌈3A/R⌉)", () => {
 
             ].sort((firstAmount, secondAmount) => firstAmount - secondAmount);
 
-        // 5 reviewers with 4 assignments, 2 reviewers with 5 assignments
-
         expect(assignmentCounts.filter(amount => amount === 5)).toHaveLength(2);
         expect(assignmentCounts.filter(amount => amount === 4)).toHaveLength(5);
     });
-
 
     it("should distribute 3 papers among 3 reviewers (each gets 3)", () => {
        const isolatedSession = buildSession(3)
@@ -162,7 +150,6 @@ describe("Reviewer assignment — distribution (⌈3A/R⌉)", () => {
 
             isolatedSession.submit(paper);
             submittedPapers.push(paper);
-
         }
 
         isolatedSession.closeSubmissions();
@@ -190,7 +177,6 @@ describe("Reviewer assignment — distribution (⌈3A/R⌉)", () => {
 });
 //#endregion
 
-
 //#region Reviewer assignment bid priority
 describe("Reviewer assignment — bid priority", () => {
 
@@ -201,17 +187,10 @@ describe("Reviewer assignment — bid priority", () => {
         const paper = new Paper("Test Paper",[author1],author1);
 
         isolatedSession.submit(paper);
-
         isolatedSession.closeSubmissions();
         isolatedSession.enterBid(paper,reviewer1,Interests.NotInterested);
         isolatedSession.enterBid(paper,reviewer2,Interests.Maybe);
-
-        isolatedSession.enterBid(
-            paper,
-            reviewer3,
-            Interests.Interested
-        );
-
+        isolatedSession.enterBid(paper,reviewer3,Interests.Interested);
         isolatedSession.closeBidAndAssign();
 
         const assignedReviewers = isolatedSession.assignmentsFor(paper);
@@ -223,7 +202,6 @@ describe("Reviewer assignment — bid priority", () => {
     it("should fill remaining slots with Maybe if not enough Interested", () => {
 
         const isolatedSession = buildSession(3);        
-
         const paper = new Paper("Test Paper",[author1],author1);
 
         isolatedSession.submit(paper);
