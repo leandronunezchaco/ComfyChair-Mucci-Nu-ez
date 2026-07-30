@@ -4,7 +4,7 @@ skinparam ClassAttributeIconSize 0
 
 class User {
     -_name: String
-    -_afilliation: String
+    -_affiliation: String
     -_email: String
     -_password: String
 }
@@ -21,30 +21,35 @@ class Conference{
 
 class Session{
     -_state: SessionState
-    -_programComittee: User[]
-    -_papers : Papers []
+    -_programCommittee: User[]
+    -_papers : Paper []
     -_bids: Bid []
-    -_assignments: Map<Paper,Revierwe>
+    -_assignments: Map <Paper,User[]>
     -_reviewers: User []
     -_acceptanceStrategy: AcceptanceStrategy
 
-    +closeSubmissions()
-    +closeAndAssing()
-    +closeReviewing()
     +submit()
-    +canSubmit()
+    +closeSubmissions()
+    +enterBid()
+    +closeBidAndAssign()
     +addReview()
+    +closeReviewing()
     +selectPapers()
-    +assignmentsFor() 
+
+    +canSubmit()
+    +assignmentsFor()
     +isAssigned()
     +interestFor()
+
+    +transitionTo()
     +setAcceptanceStrategy()
 }
 
 class Bid {
     -_paper: Paper
     -_reviewer: User
-    -_interest: BidValue
+    -_interest: Interest
+
     +paper()
     +reviewer()
     +interest()
@@ -56,12 +61,14 @@ abstract class Paper {
     -_authors: User[]
     -_correspondingAuthor: User
     -_reviews: Review[]
-    +isValid() : Boolean
-    +addReview()
-    +score()
-    +reviewCount()
+    
     +title()
     +reviews()
+
+    +isValid() : Boolean
+    +addReview()
+    +reviewsCount()
+    +score()
 }
 
 class Review{
@@ -73,6 +80,7 @@ class Review{
 
 class RegularPaper {
     -_abstract:String
+
     +abstract()
     +setAbstract()
     +abstractWordCount()
@@ -81,27 +89,18 @@ class RegularPaper {
 
 class Poster {
     -_attachmentUrl:String
-    -_sourceUrl: String
-    +attachmentUrl
-    +sourceUrl
+    -_sourcesUrl: String
+
+    +attachmentUrl()
+    +sourceUrl()
     
 }
 
-
 enum Interest{
-    Interested,
-    Maybe,
+    Interested
+    Maybe
     NotInterested
 }
-
-enum SessionState{
-    Receiving
-    Bidding
-    Reviewing
-    Selection
-}
-
-
 
 
 
@@ -126,7 +125,8 @@ Bid "*" -- "1" User : reviewer
 Bid "*" -- "1" Paper : paper
 
 
-' Agrego una nueva jerarquia
+'============ STRATEGY PATTERN ============
+
 abstract class AcceptanceStrategy{
     +accept(papers)
 }
@@ -146,10 +146,56 @@ class AcceptanceByScoreThreshold{
     +accept(papers)
 }
 
-Session --> AcceptanceStrategy
-
 AcceptanceStrategy <|--AcceptanceByPercentage
 AcceptanceStrategy <|--AcceptanceByCount
 AcceptanceStrategy <|--AcceptanceByScoreThreshold
+
+'============ STATE PATTERN ============
+
+abstract class SessionState{
+    +name()
+
+    +submit(session,paper)
+    +closeSubmissions(session)
+
+    +enterBid(session,paper,reviewer,interest)
+    +closeBidAndAssign(session)
+
+    +addReview(session,paper,reviewer,text,score)
+    +closeReviewing(session)
+
+    +selectPapers(session)
+}
+
+class ReceivingState{
+    +name()
+    +submit(session,paper)
+    +closeSubmissions(session)
+}
+class BiddingState{
+    +name()
+    +enterBid(session, paper, reviewer,interest)
+    +closeBidAndAssign(session)
+}
+
+class ReviewingState{
+    +name()
+    +addReview(session,paper,reviewer,text,score)
+    +closeReviewing(session)
+}
+
+class SelectionState{
+    +name()
+    +selectPapers(session)
+}
+
+SessionState <|-- ReceivingState
+SessionState <|-- BiddingState
+SessionState <|-- ReviewingState
+SessionState <|-- SelectionState
+
+Session *-- SessionState
+SelectionState --> AcceptanceStrategy : uses
+
 
 @enduml
